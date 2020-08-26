@@ -6,25 +6,22 @@ import os
 
 blast_home = "/mnt/common/gtsw/pkg/ncbi-blast/default"
 
+ofmt = {"tab": 6, "sam": 17, "standard": 0}
+
 ap = argparse.ArgumentParser()
 ap.add_argument("--evalue", type=float, default=0.005, help="evalue cutoff.")
 ap.add_argument(
-    "--format", choices=("standard", "tab"), default="tab", help="output format."
+    "--format", choices=("sam", "standard", "tab"), default="tab", help="output format."
 )
 ap.add_argument("--query", help="FASTA query file, default stdin.")
 ap.add_argument("subject", help="FASTA subject file.")
 args = ap.parse_args()
 
-if args.format == "tab":
-    ofmt = 6
-else:
-    ofmt = 0
-
 cmd = (
     f"{blast_home}/bin/blastn "
     f"-subject {args.subject} "
     f"-evalue {args.evalue} "
-    f"-outfmt {ofmt}"
+    f"-outfmt {ofmt[args.format]} "
 )
 
 if not args.query:
