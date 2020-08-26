@@ -11,7 +11,10 @@ ofmt = {"tab": 6, "sam": 17, "standard": 0}
 ap = argparse.ArgumentParser()
 ap.add_argument("--evalue", type=float, default=0.005, help="evalue cutoff.")
 ap.add_argument(
-    "--format", choices=("sam", "standard", "tab"), default="tab", help="output format."
+    "--format",
+    choices=("sam", "standard", "tab"),
+    default="tab",
+    help='output format, default="tab".',
 )
 ap.add_argument("--query", help="FASTA query file, default stdin.")
 ap.add_argument("subject", help="FASTA subject file.")
