@@ -1,0 +1,41 @@
+#! /usr/bin/env python3
+
+import argparse
+import sys
+
+ap = argparse.ArgumentParser(
+    description="find lines that are in both afile and bfile"
+)
+ap.add_argument("afile", help="name of afile")
+ap.add_argument("bfile", help="name of bfile")
+ap.add_argument(
+    "-V",
+    "--version",
+    action="store_true",
+    dest="version_flag",
+    default=False,
+    help="Show version and exit.",
+)
+args = ap.parse_args()
+
+bitems = {}
+
+with open(args.bfile, "r") as infh:
+    for line in infh:
+        text = line.strip()
+        if text.isspace() or text.startswith("#") or text in bitems:
+            continue
+        bitems[text] = 1
+
+reported = {}
+
+with open(args.afile, "r") as infh:
+    for line in infh:
+        text = line.strip()
+        if text.isspace() or text.startswith("#") or text not in bitems:
+            continue
+        if text in reported:
+            continue
+
+        print(text)
+        reported[text] = 1

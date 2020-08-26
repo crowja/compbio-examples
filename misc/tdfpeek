@@ -1,0 +1,89 @@
+#! /usr/bin/env python3
+
+import argparse
+import sys
+
+
+def strtrunc(s, n):
+    if len(s) > n:
+        return s[0:n] + "..."
+    else:
+        return s
+
+
+maxlen = 30
+
+ap = argparse.ArgumentParser(
+    description="peek at a few records of a tab-delimited file"
+)
+
+# By default two example values are shown per row, option to set a single one
+ap.add_argument(
+    "-1",
+    dest="show_one_ex",
+    action="store_true",
+    default=False,
+    help="show only one example",
+)
+
+# Set the column delimiter
+ap.add_argument(
+    "-d",
+    "--delimiter",
+    action="store",
+    dest="delimiter",
+    default="	",
+    help="use DELIMITER as the column delimiter, default: tab",
+)
+
+# No-headers flag
+ap.add_argument(
+    "-n",
+    "--no-headers",
+    action="store_true",
+    dest="no_headers_flag",
+    default=False,
+    help="file has no header row",
+)
+
+# A positional argument for optional input file, defaults to stdin
+ap.add_argument("infile", nargs="?", default=False, help="filename (default: stdin)")
+
+# Show version flag
+ap.add_argument(
+    "-V",
+    "--version",
+    action="store_true",
+    dest="version_flag",
+    default=False,
+    help="Show version and exit.",
+)
+
+args = ap.parse_args()
+
+if args.infile:
+    infh = open(args.infile, "r")
+else:
+    infh = sys.stdin
+
+line1 = infh.readline().strip().split(args.delimiter)
+line2 = infh.readline().strip().split(args.delimiter)
+line3 = infh.readline().strip().split(args.delimiter)
+
+if not args.no_headers_flag:
+    for i in range(len(line1)):
+        if args.show_one_ex:
+            ex = f"{strtrunc(line2[i], maxlen)}"
+        else:
+            ex = f"{strtrunc(line2[i], maxlen)}\t{strtrunc(line3[i], maxlen)}"
+        print(f"[{i}]\t{strtrunc(line1[i], maxlen)}\t{ex}")  # line1 has the headers
+else:
+    for i in range(len(line1)):
+        if args.show_one_ex:
+            ex = f"{strtrunc(line1[i], maxlen)}"
+        else:
+            ex = f"{strtrunc(line1[i], maxlen)}\t{strtrunc(line2[i], maxlen)}"
+        print(f"Column_{i}\t{ex}")  # line1 is a data record
+
+
+infh.close()
