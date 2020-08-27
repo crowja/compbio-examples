@@ -25,6 +25,7 @@ cmd = (
     f"-subject {args.subject} "
     f"-evalue {args.evalue} "
     f"-outfmt {ofmt[args.format]} "
+    f"-parse_deflines "
 )
 
 if not args.query:
