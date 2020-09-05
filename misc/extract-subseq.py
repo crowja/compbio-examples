@@ -4,7 +4,7 @@ import sys
 import argparse
 from Bio import SeqIO
 
-# 23456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789
+#23456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789
 parser = argparse.ArgumentParser(
     description="Extract subsequences associated with specified regions in a "
     "reference.",
