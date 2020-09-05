@@ -58,9 +58,12 @@ for r in SeqIO.parse(sys.stdin, "fasta"):
         end = int(region[1])
         locus = region[2].strip()
         score = region[3]  # ignored
-        strand = region[4].strip()
 
-        if not strand or strand == "+" or strand == ".":
+        strand = region[4].strip()
+        if not strand:
+            strand = "+"
+
+        if strand == "+" or strand == ".":
             seqtext = str(r.seq[start - args.offset : end])
         elif strand == "-":
             seqtext = str(r.seq[start - args.offset : end].reverse_complement())
