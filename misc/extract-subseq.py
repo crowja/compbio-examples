@@ -51,14 +51,9 @@ for r in SeqIO.parse(sys.stdin, "fasta"):
 
         if strand == "+" or strand == ".":
             seqtext = str(r.seq[start - args.offset : end])
-            print(
-                f'>{locus} source="{chr}" start{args.offset}="{start}" end{args.offset}="{end}" strand="{strand}"'
-            )
-            print(f"{seqtext}")
-
         elif strand == "-":
             seqtext = str(r.seq[start - args.offset : end].reverse_complement())
-            print(
-                f'>{locus} source="{chr}" start{args.offset}="{start}" end{args.offset}="{end}" strand="{strand}"'
-            )
-            print(f"{seqtext}")
+        print(
+            f'>{locus} source="{chr}" start{args.offset}="{start}" end{args.offset}="{end}" strand="{strand}"'
+        )
+        print(f"{seqtext}")
