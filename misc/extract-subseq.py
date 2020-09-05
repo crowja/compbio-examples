@@ -77,3 +77,9 @@ for r in SeqIO.parse(sys.stdin, "fasta"):
             f'>{locus} source="{chr}" start{args.offset}="{start}" end{args.offset}="{end}" strand="{strand}"'
         )
         print(f"{seqtext}")
+
+    # Remove the entry in regions_by_chr, bail if there are no more regions.
+    if chr in regions_by_chr:
+        del regions_by_chr[chr]
+    if not regions_by_chr:
+        break
