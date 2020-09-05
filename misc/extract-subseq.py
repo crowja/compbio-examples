@@ -10,19 +10,16 @@ parser.add_argument(
 )
 parser.add_argument(
     "--one-based-coords",
-    action="store_true",
-    default=False,
+    action="store_const",
+    const=1,
+    dest="offset",
+    default=0,
     help="the REGIONS bedfile uses 1-based coordinates rather than 0-based",
 )
 args = parser.parse_args()
 
 if not args.regions:
     exit(0)
-
-if args.one_based_coords:
-    offset = 1
-else:
-    offset = 0
 
 regions_by_chr = {}
 
@@ -53,16 +50,15 @@ for r in SeqIO.parse(sys.stdin, "fasta"):
             strand = "+"
 
         if strand == "+" or strand == ".":
-            seqtext = str(r.seq[start - offset : end])
+            seqtext = str(r.seq[start - args.offset : end])
             print(
-                f'>{locus} source="{chr}" start{offset}="{start}" end{offset}="{end}" strand="{strand}"'
+                f'>{locus} source="{chr}" start{args.offset}="{start}" end{args.offset}="{end}" strand="{strand}"'
             )
             print(f"{seqtext}")
 
         elif strand == "-":
-            seqtext = str(r.seq[start - offset : end].reverse_complement())
+            seqtext = str(r.seq[start - args.offset : end].reverse_complement())
             print(
-                f'>{locus} source="{chr}" start{offset}="{start}" end{offset}="{end}" strand="{strand}"'
+                f'>{locus} source="{chr}" start{args.offset}="{start}" end{args.offset}="{end}" strand="{strand}"'
             )
             print(f"{seqtext}")
-            ##print(f"{str(r.seq[start : end])}")
