@@ -1,7 +1,6 @@
 #! /usr/bin/env python3
 
 
-
 def strand_guess(aligner, q, t, minpct=50):
     """Guess the strand of t (target) that q (query) lies on.
 
