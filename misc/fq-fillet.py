@@ -33,8 +33,9 @@ if __name__ == "__main__":
             d = int((seq_len - targ_len) / 2)
             start = d
             end = start + targ_len
-        print(f"Sequence length is {seq_len}. The fillet is {start} to {end}.")
+        ##print(f"Sequence length is {seq_len}. The fillet is {start} to {end}.")
         try:
             print(r[start:end].format("fastq"))
         except:
-            exit(0)
+            print(f"fq-fillet.bash failed on sequence {r.id}, exiting") 
+            exit(1)
