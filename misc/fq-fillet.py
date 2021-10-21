@@ -37,5 +37,5 @@ if __name__ == "__main__":
         try:
             print(r[start:end].format("fastq"))
         except:
-            print(f"fq-fillet.bash failed on sequence {r.id}, exiting") 
+            print(f"fq-fillet.bash failed on sequence {r.id}, exiting", file=sys.stderr) 
             exit(1)
