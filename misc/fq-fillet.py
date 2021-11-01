@@ -21,7 +21,7 @@ def get_options():
         "-e",
         "--end",
         choices={"L", "R", "LR"},
-        default="LR",
+        default="R",
         help="Trim from left, right, or both symmetrically",
     )
     return p.parse_args()
