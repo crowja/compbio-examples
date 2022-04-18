@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 import argparse
+import csv
 import sys
 
 
@@ -62,13 +63,14 @@ ap.add_argument(
 args = ap.parse_args()
 
 if args.infile:
-    infh = open(args.infile, "r")
+    infh = open(args.infile, "r", newline="")
 else:
     infh = sys.stdin
 
-line1 = infh.readline().strip().split(args.delimiter)
-line2 = infh.readline().strip().split(args.delimiter)
-line3 = infh.readline().strip().split(args.delimiter)
+reader = csv.reader(infh, delimiter=args.delimiter)
+line1 = next(reader)
+line2 = next(reader)
+line3 = next(reader)
 
 if not args.no_headers_flag:
     for i in range(len(line1)):
