@@ -1,0 +1,224 @@
+#! /usr/bin/env python3
+
+import argparse
+import re
+import sys
+
+
+def fasta_reader(infile=False):
+    header = ""
+    seqtxt = ""
+    state = "AT_START"
+
+    with open(infile, "r") if infile else sys.stdin as infh:
+        for line in infh:
+            text = line.strip()
+
+            if not text:
+                continue
+
+            if state == "AT_START":
+                if text.startswith(">"):
+                    header = re.sub(r"^[>\s]+", "", text)
+                    seqtext = ""
+                    state = "IN_HEADER"
+                else:
+                    seqtxt = re.sub(r"\s", "", text)
+                    state = "IN_SEQTEXT"
+
+            elif state == "IN_HEADER":
+                if text.startswith(">"):
+                    yield header, seqtxt
+                    header = re.sub(r"^[>\s]+", "", text)
+                    seqtxt = ""
+                else:
+                    seqtxt = seqtxt + re.sub(r"\s", "", text)
+                    state = "IN_SEQTEXT"
+
+            elif state == "IN_SEQTEXT":
+                if text.startswith(">"):
+                    yield header, seqtxt
+                    header = re.sub(r"^[>\s]+", "", text)
+                    seqtxt = ""
+                    state = "IN_HEADER"
+                else:
+                    seqtxt = seqtxt + re.sub(r"\s", "", text)
+            else:
+                pass
+
+    if header or seqtxt:
+        yield header, seqtxt
+
+
+def split_header(h):
+    # Splits a valid header line into id and description.
+    info = re.split(r"\s+", h, maxsplit=1)
+    if len(info) == 1:
+        return info[0], ""
+    else:
+        return info
+
+
+def re_mismatch(s):
+    if not s:
+        return False
+
+    x = list(s)
+
+    # For a single mismatch
+    chunks = []
+    for i in range(len(s)):
+        y = x.copy()
+        y[i] = f"[^{x[i]}]"
+        chunks.append("".join(y))
+    regex1 = "|".join(chunks)
+
+    # For exactly two mismatches
+    chunks = []
+    for i in range(len(s) - 1):
+        for j in range(i + 1, len(s)):
+            y = x.copy()
+            y[i] = f"[^{x[i]}]"
+            y[j] = f"[^{x[j]}]"
+            chunks.append("".join(y))
+    regex2 = "|".join(chunks)
+
+    # For exactly three mismatches
+    chunks = []
+    for i in range(len(s) - 2):
+        for j in range(i + 1, len(s) - 1):
+            for k in range(j + 1, len(s)):
+                y = x.copy()
+                y[i] = f"[^{x[i]}]"
+                y[j] = f"[^{x[j]}]"
+                y[k] = f"[^{x[k]}]"
+                chunks.append("".join(y))
+    regex3 = "|".join(chunks)
+
+    return rf"{regex1}", rf"{regex2}", rf"{regex3}"
+
+
+def revcomp(s):
+    r = re.sub("acgtu", "tgcaa", s, flags=re.IGNORECASE).upper()
+    l = list(r)
+    l.reverse()
+    return "".join(l)
+
+
+def print_hit(qseqid, qlen, tseqid, tstart0, tend0, match, mismatches, qstrand):
+    record = []
+    record.append(qseqid)
+    record.append(str(qlen))
+    record.append(tseqid)
+    record.append(str(tstart0))
+    record.append(str(tend0))
+    record.append(match)
+    record.append(str(mismatches))
+    record.append(qstrand)
+    print("\t".join(record))
+
+
+def print_hits(query, target):
+
+    # Read all the primers and probes in the query file
+    queries = {}
+    for qseq in fasta_reader(query):
+        qseqid, _ = split_header(qseq[0])
+        ##queries[qseqid] = qseq[1].upper()
+        queries[qseqid] = re.sub("U", "T", qseq[1].upper())
+
+    # Examine each of the target sequences
+    for tseq in fasta_reader(target):
+        tseqid, __ = split_header(tseq[0])
+        tseqtxt = re.sub("U", "T", tseq[1].upper())
+
+        for qseqid in queries:
+
+            """
+            First examine the query hitting the target sequence. Then do the
+            same for the query's reverse complement.
+            """
+
+            qseqtxt = queries[qseqid]
+
+            # No mismatches
+            hits = re.finditer(qseqtxt, tseqtxt)
+            for hit in hits:
+                start0 = hit.start(0)
+                end0 = hit.end(0)
+                found = hit.group(0)
+                print_hit(qseqid, len(qseqtxt), tseqid, start0, end0, found, 0, "+")
+
+            # Patterns for a few mismatches
+            re1, re2, re3 = re_mismatch(qseqtxt)
+
+            # Single mismatch
+            hits = re.finditer(re1, tseqtxt)
+            for hit in hits:
+                ##print(f"mismatch=1 {hit}")
+                start0 = hit.start(0)
+                end0 = hit.end(0)
+                found = hit.group(0)
+                print_hit(qseqid, len(qseqtxt), tseqid, start0, end0, found, 1, "+")
+
+            # Two mismatches
+            hits = re.finditer(re2, tseqtxt)
+            for hit in hits:
+                ##print(f"mismatch=2 {hit}")
+                start0 = hit.start(0)
+                end0 = hit.end(0)
+                found = hit.group(0)
+                print_hit(qseqid, len(qseqtxt), tseqid, start0, end0, found, 2, "+")
+
+            # Switch to the query's reverse complement
+
+            qseqtxt = revcomp(queries[qseqid])
+
+            # No mismatches
+            hits = re.finditer(qseqtxt, tseqtxt)
+            for hit in hits:
+                start0 = hit.start(0)
+                end0 = hit.end(0)
+                found = hit.group(0)
+                print_hit(qseqid, len(qseqtxt), tseqid, start0, end0, found, 0, "-")
+
+            # Patterns for a few mismatches
+            re1, re2, re3 = re_mismatch(qseqtxt)
+
+            # Single mismatch
+            hits = re.finditer(re1, tseqtxt)
+            for hit in hits:
+                ##print(f"mismatch=1 {hit}")
+                start0 = hit.start(0)
+                end0 = hit.end(0)
+                found = hit.group(0)
+                print_hit(qseqid, len(qseqtxt), tseqid, start0, end0, found, 1, "-")
+
+            # Two mismatches
+            hits = re.finditer(re2, tseqtxt)
+            for hit in hits:
+                ##print(f"mismatch=2 {hit}")
+                start0 = hit.start(0)
+                end0 = hit.end(0)
+                found = hit.group(0)
+                print_hit(qseqid, len(qseqtxt), tseqid, start0, end0, found, 2, "-")
+
+
+if __name__ == "__main__":
+    ap = argparse.ArgumentParser(
+        epilog="""
+        For each query sequence print exact hits to the target sequences as well as
+        hits with one and two mismatches. Each query sequence and its reverse
+        complement are evaluated.
+        """
+    )
+    ap.add_argument("query", help="fasta file of primers and probes")
+    ap.add_argument(
+        "target",
+        nargs="?",
+        default=False,
+        help="fasta file of target sequences, default stdin",
+    )
+    args = ap.parse_args()
+
+    print_hits(args.query, args.target)
